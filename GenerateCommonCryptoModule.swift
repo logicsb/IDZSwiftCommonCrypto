@@ -14,8 +14,8 @@ NSSetUncaughtExceptionHandler(handler)
 func runShellCommand(command: String) -> String? {
     let args: [String] = command.characters.split { $0 == " " }.map(String.init)
     let other = args[1..<args.count]
-    let outputPipe = NSPipe()
-    let task = NSTask()
+    let outputPipe = Pipe()
+    let task = Process()
     task.launchPath = args[0]
     task.arguments = other.map { $0 }
     task.standardOutput = outputPipe
@@ -25,17 +25,17 @@ func runShellCommand(command: String) -> String? {
     guard task.terminationStatus == 0 else { return nil }
 
     let outputData = outputPipe.fileHandleForReading.readDataToEndOfFile()
-    return String(data:outputData, encoding: NSUTF8StringEncoding)
+    return String(data:outputData, encoding: String.Encoding.utf8)
 }
 
 // MARK: - File System Utilities
 func fileExists(filePath: String) -> Bool {
-    return NSFileManager.defaultManager().fileExistsAtPath(filePath)
+    return FileManager.default.fileExists(atPath:filePath)
 }
 
 func mkdir(path: String) -> Bool {
     do {
-        try NSFileManager.defaultManager().createDirectoryAtPath(path, withIntermediateDirectories: true, attributes: nil)
+        try FileManager.default.createDirectory(atPath:path, withIntermediateDirectories: true, attributes: nil)
         return true
     }
     catch {
@@ -45,14 +45,14 @@ func mkdir(path: String) -> Bool {
 
 // MARK: - String Utilities
 func trim(s: String) -> String {
-    return ((s as NSString).stringByTrimmingCharactersInSet(NSCharacterSet.whitespaceAndNewlineCharacterSet()) as String)
+    return s.trimmingCharacters(in: .whitespacesAndNewlines)
 }
 
 func trim(s: String?) -> String? {
-    return (s == nil) ? nil : (trim(s!) as String)
+    return (s == nil) ? nil : (trim(s: s!) as String)
 }
 
-@noreturn func reportError(message: String) {
+func reportError(message: String) -> Never {
     print("ERROR: \(message)")
     exit(1)
 }
@@ -70,12 +70,12 @@ enum SDK: String {
     
 }
 
-guard let sdk = SDK(rawValue: Process.arguments[1])?.rawValue else { reportError("SDK must be one of \(SDK.all.map { $0.rawValue })") }
-guard let sdkVersion = trim(runShellCommand("/usr/bin/xcrun --sdk \(sdk) --show-sdk-version")) else {
-    reportError("ERROR: Failed to determine SDK version for \(sdk)")
+guard let sdk = SDK(rawValue: Process().arguments![1])?.rawValue else { reportError(message:"SDK must be one of \(SDK.all.map { $0.rawValue })") }
+guard let sdkVersion = trim(s:runShellCommand(command:"/usr/bin/xcrun --sdk \(sdk) --show-sdk-version")) else {
+    reportError(message:"ERROR: Failed to determine SDK version for \(sdk)")
 }
-guard let sdkPath = trim(runShellCommand("/usr/bin/xcrun --sdk \(sdk) --show-sdk-path")) else {
-    reportError("ERROR: Failed to determine SDK path for \(sdk)")
+guard let sdkPath = trim(s:runShellCommand(command:"/usr/bin/xcrun --sdk \(sdk) --show-sdk-path")) else {
+    reportError(message:"ERROR: Failed to determine SDK path for \(sdk)")
 }
 
 if verbose {
@@ -86,21 +86,21 @@ if verbose {
 
 let moduleDirectory: String
 let moduleFileName: String
-if Process.arguments.count > 2 {
-    moduleDirectory =  "\(Process.arguments[2])/Frameworks/\(sdk)/CommonCrypto.framework"
+if Process().arguments!.count > 2 {
+    moduleDirectory =  "\(Process().arguments![2])/Frameworks/\(sdk)/CommonCrypto.framework"
     moduleFileName = "module.map"
 }
 else {
     moduleDirectory = "\(sdkPath)/System/Library/Frameworks/CommonCrypto.framework"
     moduleFileName = "module.map"
     
-    if fileExists(moduleDirectory) {
-        reportError("Module directory already exists at \(moduleDirectory).")
+    if fileExists(filePath:moduleDirectory) {
+        reportError(message:"Module directory already exists at \(moduleDirectory).")
     }
 }
 
-if !mkdir(moduleDirectory) {
-    reportError("Failed to create module directory \(moduleDirectory)")
+if !mkdir(path:moduleDirectory) {
+    reportError(message:"Failed to create module directory \(moduleDirectory)")
 }
 
 let headerDir = "\(sdkPath)/usr/include/CommonCrypto/"
@@ -116,11 +116,10 @@ let moduleMapFile =
 
 let moduleMapPath = "\(moduleDirectory)/\(moduleFileName)"
 do {
-    try moduleMapFile.writeToFile(moduleMapPath, atomically: true, encoding:NSUTF8StringEncoding)
+    try moduleMapFile.write(toFile:moduleMapPath, atomically: true, encoding:String.Encoding.utf8)
     print("Successfully created module \(moduleMapPath)")
     exit(0)
 }
 catch {
-    reportError("Failed to write module map file to \(moduleMapPath)")
+    reportError(message:"Failed to write module map file to \(moduleMapPath)")
 }
-

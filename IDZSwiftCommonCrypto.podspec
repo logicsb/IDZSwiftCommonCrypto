@@ -24,13 +24,13 @@ Pod::Spec.new do |s|
   echo 'Running prepare_command'
   pwd
   echo Running GenerateCommonCryptoModule
-  swift -DSWIFT_VERSION=2.3 ./GenerateCommonCryptoModule.swift macosx .
-  swift -DSWIFT_VERSION=2.3 ./GenerateCommonCryptoModule.swift iphonesimulator .
-  swift -DSWIFT_VERSION=2.3 ./GenerateCommonCryptoModule.swift iphoneos .
-  swift -DSWIFT_VERSION=2.3 ./GenerateCommonCryptoModule.swift appletvsimulator .
-  swift -DSWIFT_VERSION=2.3 ./GenerateCommonCryptoModule.swift appletvos .
-  swift -DSWIFT_VERSION=2.3 ./GenerateCommonCryptoModule.swift watchsimulator .
-  swift -DSWIFT_VERSION=2.3 ./GenerateCommonCryptoModule.swift watchos .
+  swift ./GenerateCommonCryptoModule.swift macosx .
+  swift ./GenerateCommonCryptoModule.swift iphonesimulator .
+  swift ./GenerateCommonCryptoModule.swift iphoneos .
+  swift ./GenerateCommonCryptoModule.swift appletvsimulator .
+  swift ./GenerateCommonCryptoModule.swift appletvos .
+  swift ./GenerateCommonCryptoModule.swift watchsimulator .
+  swift ./GenerateCommonCryptoModule.swift watchos .
 
 CMD
 
