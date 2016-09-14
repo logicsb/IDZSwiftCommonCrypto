@@ -70,7 +70,7 @@ enum SDK: String {
     
 }
 
-guard let sdk = SDK(rawValue: Process().arguments![1])?.rawValue else { reportError(message:"SDK must be one of \(SDK.all.map { $0.rawValue })") }
+guard let sdk = SDK(rawValue: ProcessInfo.processInfo.arguments[1])?.rawValue else { reportError(message:"SDK must be one of \(SDK.all.map { $0.rawValue })") }
 guard let sdkVersion = trim(s:runShellCommand(command:"/usr/bin/xcrun --sdk \(sdk) --show-sdk-version")) else {
     reportError(message:"ERROR: Failed to determine SDK version for \(sdk)")
 }
@@ -87,7 +87,7 @@ if verbose {
 let moduleDirectory: String
 let moduleFileName: String
 if Process().arguments!.count > 2 {
-    moduleDirectory =  "\(Process().arguments![2])/Frameworks/\(sdk)/CommonCrypto.framework"
+    moduleDirectory =  "\(ProcessInfo.processInfo.arguments[2])/Frameworks/\(sdk)/CommonCrypto.framework"
     moduleFileName = "module.map"
 }
 else {
