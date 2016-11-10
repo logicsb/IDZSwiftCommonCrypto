@@ -22,14 +22,14 @@ import CommonCrypto
     let digest = md5.final()
     ````
   */
-open class Digest : Updateable
+public class Digest : Updateable
 {
     ///
     /// The status of the Digest.
     /// For CommonCrypto this will always be `.Success`.
     /// It is here to provide for engines which can fail.
     ///
-    open var status = Status.success
+    public var status = Status.Success
     
     ///
     /// Enumerates available Digest algorithms
@@ -37,21 +37,21 @@ open class Digest : Updateable
     public enum Algorithm
     {
         /// Message Digest 2 See: http://en.wikipedia.org/wiki/MD2_(cryptography)
-        case md2,
+        case MD2,
         /// Message Digest 4
-        md4,
+        MD4,
         /// Message Digest 5
-        md5,
+        MD5,
         /// Secure Hash Algorithm 1
-        sha1,
+        SHA1,
         /// Secure Hash Algorithm 2 224-bit
-        sha224,
+        SHA224,
         /// Secure Hash Algorithm 2 256-bit
-        sha256,
+        SHA256,
         /// Secure Hash Algorithm 2 384-bit
-        sha384,
+        SHA384,
         /// Secure Hash Algorithm 2 512-bit
-        sha512
+        SHA512
     }
     
     var engine: DigestEngine
@@ -62,21 +62,21 @@ open class Digest : Updateable
     public init(algorithm: Algorithm)
     {
         switch algorithm {
-        case .md2:
+        case .MD2:
             engine = DigestEngineCC<CC_MD2_CTX>(initializer:CC_MD2_Init, updater:CC_MD2_Update, finalizer:CC_MD2_Final, length:CC_MD2_DIGEST_LENGTH)
-        case .md4:
+        case .MD4:
             engine = DigestEngineCC<CC_MD4_CTX>(initializer:CC_MD4_Init, updater:CC_MD4_Update, finalizer:CC_MD4_Final, length:CC_MD4_DIGEST_LENGTH)
-        case .md5:
+        case .MD5:
             engine = DigestEngineCC<CC_MD5_CTX>(initializer:CC_MD5_Init, updater:CC_MD5_Update, finalizer:CC_MD5_Final, length:CC_MD5_DIGEST_LENGTH)
-        case .sha1:
+        case .SHA1:
             engine = DigestEngineCC<CC_SHA1_CTX>(initializer:CC_SHA1_Init, updater:CC_SHA1_Update, finalizer:CC_SHA1_Final, length:CC_SHA1_DIGEST_LENGTH)
-        case .sha224:
+        case .SHA224:
             engine = DigestEngineCC<CC_SHA256_CTX>(initializer:CC_SHA224_Init, updater:CC_SHA224_Update, finalizer:CC_SHA224_Final, length:CC_SHA224_DIGEST_LENGTH)
-        case .sha256:
+        case .SHA256:
             engine = DigestEngineCC<CC_SHA256_CTX>(initializer:CC_SHA256_Init, updater:CC_SHA256_Update, finalizer:CC_SHA256_Final, length:CC_SHA256_DIGEST_LENGTH)
-        case .sha384:
+        case .SHA384:
             engine = DigestEngineCC<CC_SHA512_CTX>(initializer:CC_SHA384_Init, updater:CC_SHA384_Update, finalizer:CC_SHA384_Final, length:CC_SHA384_DIGEST_LENGTH)
-        case .sha512:
+        case .SHA512:
             engine = DigestEngineCC<CC_SHA512_CTX>(initializer:CC_SHA512_Init, updater:CC_SHA512_Update, finalizer:CC_SHA512_Final, length:CC_SHA512_DIGEST_LENGTH)
         }
     }
@@ -88,9 +88,9 @@ open class Digest : Updateable
         - parameter the: number of bytes in buffer
         - returns: this Digest object (for optional chaining)
     */
-    open func update(buffer: UnsafeRawPointer, byteCount: size_t) -> Self?
+    public func update(buffer: UnsafePointer<Void>, _ byteCount: size_t) -> Self?
     {
-        engine.update(buffer: buffer, byteCount: CC_LONG(byteCount))
+        engine.update(buffer, CC_LONG(byteCount))
         return self
     }
     
@@ -98,7 +98,7 @@ open class Digest : Updateable
        Completes the calculate of the messge digest
        - returns: the message digest
      */
-    open func final() -> [UInt8]
+    public func final() -> [UInt8]
     {
         return engine.final()
     }
@@ -112,7 +112,7 @@ open class Digest : Updateable
  */
 protocol DigestEngine
 {
-    func update(buffer: UnsafeRawPointer, byteCount: CC_LONG)
+    func update(buffer: UnsafePointer<Void>, _ byteCount: CC_LONG)
     func final() -> [UInt8]
 }
 /**
@@ -121,42 +121,47 @@ protocol DigestEngine
  */
 class DigestEngineCC<C> : DigestEngine {
     typealias Context = UnsafeMutablePointer<C>
-    typealias Buffer = UnsafeRawPointer
+    typealias Buffer = UnsafePointer<Void>
     typealias Digest = UnsafeMutablePointer<UInt8>
     typealias Initializer = (Context) -> (Int32)
     typealias Updater = (Context, Buffer, CC_LONG) -> (Int32)
     typealias Finalizer = (Digest, Context) -> (Int32)
     
-    let context = Context.allocate(capacity: 1)
+    let context = Context.alloc(1)
     var initializer : Initializer
     var updater : Updater
     var finalizer : Finalizer
     var length : Int32
     
-    init(initializer : @escaping Initializer, updater : @escaping Updater, finalizer : @escaping Finalizer, length : Int32)
+    init(initializer : Initializer, updater : Updater, finalizer : Finalizer, length : Int32)
     {
         self.initializer = initializer
         self.updater = updater
         self.finalizer = finalizer
         self.length = length
-        _ = initializer(context)
+        initializer(context)
     }
     
     deinit
     {
-        context.deallocate(capacity: 1)
+        context.dealloc(1)
     }
     
-    func update(buffer: Buffer, byteCount: CC_LONG)
+    func update(buffer: Buffer, _ byteCount: CC_LONG)
     {
-        _ = updater(context, buffer, byteCount)
+        updater(context, buffer, byteCount)
     }
     
     func final() -> [UInt8]
     {
         let digestLength = Int(self.length)
-        var digest = Array<UInt8>(repeating: 0, count: digestLength)
-        _ = finalizer(&digest, context)
+        var digest = Array<UInt8>(count:digestLength, repeatedValue: 0)
+        finalizer(&digest, context)
         return digest
     }
 }
+
+
+
+
+

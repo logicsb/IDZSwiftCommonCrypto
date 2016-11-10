@@ -18,7 +18,7 @@ import CommonCrypto
 
     For small, in-memory buffers Cryptor may be easier to use.
 */
-open class StreamCryptor
+public class StreamCryptor
 {
     ///
     /// Enumerates Cryptor operations
@@ -26,32 +26,32 @@ open class StreamCryptor
     public enum Operation
     {
         /// Encrypting
-        case encrypt,
+        case Encrypt,
         /// Decrypting
-        decrypt
+        Decrypt
         
         /// Convert to native `CCOperation`
         func nativeValue() -> CCOperation {
             switch self {
-            case .encrypt : return CCOperation(kCCEncrypt)
-            case .decrypt : return CCOperation(kCCDecrypt)
+            case Encrypt : return CCOperation(kCCEncrypt)
+            case Decrypt : return CCOperation(kCCDecrypt)
             }
         }
     }
     
     public enum ValidKeySize {
-        case fixed(Int)
-        case discrete([Int])
-        case range(Int,Int)
+        case Fixed(Int)
+        case Discrete([Int])
+        case Range(Int,Int)
         
         /**
             Determines if a given `keySize` is valid for this algorithm.
         */
-        func isValid(keySize: Int) -> Bool {
+        func isValidKeySize(keySize: Int) -> Bool {
             switch self {
-            case .fixed(let fixed): return (fixed == keySize)
-            case .range(let min, let max): return ((keySize >= min) && (keySize <= max))
-            case .discrete(let values): return values.contains(keySize)
+            case .Fixed(let fixed): return (fixed == keySize)
+            case .Range(let min, let max): return ((keySize >= min) && (keySize <= max))
+            case .Discrete(let values): return values.contains(keySize)
             }
         }
         
@@ -60,14 +60,14 @@ open class StreamCryptor
             than the given value.
             Will return `nil` if the passed in `keySize` is greater than the max.
         */
-        func padded(keySize: Int) -> Int? {
+        func paddedKeySize(keySize: Int) -> Int? {
             switch self {
-            case .fixed(let fixed):
+            case .Fixed(let fixed):
                 return (keySize <= fixed) ? fixed : nil
-            case .range(let min, let max):
+            case .Range(let min, let max):
                 return (keySize > max) ? nil : ((keySize < min) ? min : keySize)
-            case .discrete(let values):
-                return values.sorted().reduce(nil) { answer, current in
+            case .Discrete(let values):
+                return values.sort().reduce(nil) { answer, current in
                     return answer ?? ((current >= keySize) ? current : nil)
                 }
             }
@@ -75,121 +75,68 @@ open class StreamCryptor
         
         
     }
-	
-	///
-	/// Enumerates encryption mode
-	///
-	public enum Mode
-	{
-		case ECB
-		case CBC
-		case CFB
-		case CTR
-		case F8	//		= 5, // Unimplemented for now (not included)
-		case LRW//		= 6, // Unimplemented for now (not included)
-		case OFB
-		case XTS
-		case RC4
-		case CFB8
-		
-		func nativeValue() -> CCMode {
-			switch self {
-			case .ECB : return CCMode(kCCModeECB)
-			case .CBC : return CCMode(kCCModeCBC)
-			case .CFB : return CCMode(kCCModeCFB)
-			case .CTR : return CCMode(kCCModeCTR)
-			case .F8 : return CCMode(kCCModeF8)// Unimplemented for now (not included)
-			case .LRW : return CCMode(kCCModeLRW)// Unimplemented for now (not included)
-			case .OFB : return CCMode(kCCModeOFB)
-			case .XTS : return CCMode(kCCModeXTS)
-			case .RC4 : return CCMode(kCCModeRC4)
-			case .CFB8 : return CCMode(kCCModeCFB8)
-			}
-		}
-	}
-	
-	/**
-	 Enumerated encryption paddings
-	 See: https://en.wikipedia.org/wiki/Block_cipher_mode_of_operation#Padding
-	*/
-	public enum Padding
-	{
-		/// No Padding -> Use only when you messages have correct block size.
-		case NoPadding
-		
-		/// PKCS7 Padding
-		case PKCS7Padding
-		
-		func nativeValue() -> CCPadding {
-			switch self {
-			case .NoPadding : return CCPadding(ccNoPadding)
-			case .PKCS7Padding : return CCPadding(ccPKCS7Padding)
-			}
-		}
-	}
-	
     ///
     /// Enumerates available algorithms
     ///
     public enum Algorithm
     {
         /// Advanced Encryption Standard
-        case aes,
+        case AES,
         /// Data Encryption Standard
-        des,
+        DES,
         /// Triple DES
-        tripleDES,
+        TripleDES,
         /// CAST
-        cast,
+        CAST,
         /// RC2
-        rc2,
+        RC2,
         /// Blowfish
-        blowfish
+        Blowfish
         
         /// Blocksize, in bytes, of algorithm.
         public func blockSize() -> Int {
             switch self {
-            case .aes : return kCCBlockSizeAES128
-            case .des : return kCCBlockSizeDES
-            case .tripleDES : return kCCBlockSize3DES
-            case .cast : return kCCBlockSizeCAST
-            case .rc2: return kCCBlockSizeRC2
-            case .blowfish : return kCCBlockSizeBlowfish
+            case AES : return kCCBlockSizeAES128
+            case DES : return kCCBlockSizeDES
+            case TripleDES : return kCCBlockSize3DES
+            case CAST : return kCCBlockSizeCAST
+            case RC2: return kCCBlockSizeRC2
+            case Blowfish : return kCCBlockSizeBlowfish
             }
         }
         /// Native, CommonCrypto constant for algorithm.
         func nativeValue() -> CCAlgorithm
         {
             switch self {
-            case .aes : return CCAlgorithm(kCCAlgorithmAES)
-            case .des : return CCAlgorithm(kCCAlgorithmDES)
-            case .tripleDES : return CCAlgorithm(kCCAlgorithm3DES)
-            case .cast : return CCAlgorithm(kCCAlgorithmCAST)
-            case .rc2: return CCAlgorithm(kCCAlgorithmRC2)
-            case .blowfish : return CCAlgorithm(kCCAlgorithmBlowfish)
+            case AES : return CCAlgorithm(kCCAlgorithmAES)
+            case DES : return CCAlgorithm(kCCAlgorithmDES)
+            case TripleDES : return CCAlgorithm(kCCAlgorithm3DES)
+            case CAST : return CCAlgorithm(kCCAlgorithmCAST)
+            case RC2: return CCAlgorithm(kCCAlgorithmRC2)
+            case Blowfish : return CCAlgorithm(kCCAlgorithmBlowfish)
             }
         }
         
         /// Determines the valid key size for this algorithm
         func validKeySize() -> ValidKeySize {
             switch self {
-            case .aes : return .discrete([kCCKeySizeAES128, kCCKeySizeAES192, kCCKeySizeAES256])
-            case .des : return .fixed(kCCKeySizeDES)
-            case .tripleDES : return .fixed(kCCKeySize3DES)
-            case .cast : return .range(kCCKeySizeMinCAST, kCCKeySizeMaxCAST)
-            case .rc2: return .range(kCCKeySizeMinRC2, kCCKeySizeMaxRC2)
-            case .blowfish : return .range(kCCKeySizeMinBlowfish, kCCKeySizeMaxBlowfish)
+            case AES : return .Discrete([kCCKeySizeAES128, kCCKeySizeAES192, kCCKeySizeAES256])
+            case DES : return .Fixed(kCCKeySizeDES)
+            case TripleDES : return .Fixed(kCCKeySize3DES)
+            case CAST : return .Range(kCCKeySizeMinCAST, kCCKeySizeMaxCAST)
+            case RC2: return .Range(kCCKeySizeMinRC2, kCCKeySizeMaxRC2)
+            case Blowfish : return .Range(kCCKeySizeMinBlowfish, kCCKeySizeMaxBlowfish)
             }
         }
         
         /// Tests if a given keySize is valid for this algorithm
-        func isValid(keySize: Int) -> Bool {
-            return self.validKeySize().isValid(keySize: keySize)
+        func isValidKeySize(keySize: Int) -> Bool {
+            return self.validKeySize().isValidKeySize(keySize)
         }
         
         /// Calculates the next, if any, valid keySize greater or equal to a given `keySize` for this algorithm
-        func padded(keySize: Int) -> Int? {
-            return self.validKeySize().padded(keySize: keySize)
+        func paddedKeySize(keySize: Int) -> Int? {
+            return self.validKeySize().paddedKeySize(keySize)
         }
     }
     
@@ -204,7 +151,7 @@ open class StreamCryptor
     ///
     /// Maps CommonCryptoOptions onto a Swift struct.
     ///
-    public struct Options : OptionSet {
+    public struct Options : OptionSetType {
         public typealias RawValue = Int
         public let rawValue: RawValue
         
@@ -232,7 +179,7 @@ open class StreamCryptor
         The status code resulting from the last method call to this Cryptor.
         Used to get additional information when optional chaining collapes.
     */
-    open var status : Status = .success
+    public var status : Status = .Success
 
     //MARK: - High-level interface
     /**
@@ -243,13 +190,15 @@ open class StreamCryptor
         - parameter key: a byte array containing key data
         - parameter iv: a byte array containing initialization vector
     */
-    public convenience init(operation: Operation, algorithm: Algorithm, options: Options, key: [UInt8], iv : [UInt8])
+    public convenience init(operation: Operation, algorithm: Algorithm, options: Options, key: [UInt8],
+        iv : [UInt8])
     {
-        guard let paddedKeySize = algorithm.padded(keySize:key.count) else {
+        guard let paddedKeySize = algorithm.paddedKeySize(key.count) else {
             fatalError("FATAL_ERROR: Invalid key size")
         }
         
-        self.init(operation:operation, algorithm:algorithm, options:options, keyBuffer:zeroPad(array: key, blockSize: paddedKeySize), keyByteCount:paddedKeySize, ivBuffer:iv)
+        self.init(operation:operation, algorithm:algorithm, options:options,
+            keyBuffer:zeroPad(key, paddedKeySize), keyByteCount:paddedKeySize, ivBuffer:iv)
     }
     /**
         Creates a new StreamCryptor
@@ -259,52 +208,18 @@ open class StreamCryptor
         - parameter key: a string containing key data (will be interpreted as UTF8)
         - parameter iv: a string containing initialization vector data (will be interpreted as UTF8)
     */
-    public convenience init(operation: Operation, algorithm: Algorithm, options: Options, key: String, iv : String)
+    public convenience init(operation: Operation, algorithm: Algorithm, options: Options, key: String,
+        iv : String)
     {
         let keySize = key.utf8.count
-        guard let paddedKeySize = algorithm.padded(keySize: keySize) else {
+        guard let paddedKeySize = algorithm.paddedKeySize(keySize) else {
             fatalError("FATAL_ERROR: Invalid key size")
         }
         
-        self.init(operation:operation, algorithm:algorithm, options:options, keyBuffer:zeroPad(string: key, blockSize: paddedKeySize), keyByteCount:paddedKeySize, ivBuffer:iv)
+        self.init(operation:operation, algorithm:algorithm, options:options,
+            keyBuffer:zeroPad(key, paddedKeySize),
+            keyByteCount:paddedKeySize, ivBuffer:iv)
     }
-	/**
-	Creates a new StreamCryptor
-	
-	- parameter operation: the operation to perform see Operation (Encrypt, Decrypt)
-	- parameter algorithm: the algorithm to use see Algorithm (AES, DES, TripleDES, CAST, RC2, Blowfish)
-	- parameter mode: the mode used by algorithm see Mode (ECB, CBC, CFB, CTR, F8, LRW, OFB, XTS, RC4, CFB8)
-	- parameter padding: the padding to use. When using NoPadding: each block of UPDATE must be correct size
-	- parameter key: a byte array containing key data
-	- parameter iv: a byte array containing initialization vector
-	
-	*/
-	public convenience init(operation: Operation, algorithm: Algorithm, mode: Mode, padding: Padding, key: [UInt8], iv : [UInt8]) {
-        
-        guard algorithm.isValid(keySize: key.count) else  { fatalError("FATAL_ERROR: Invalid key size.") }
-
-		
-		self.init(operation: operation, algorithm: algorithm, mode: mode, padding: padding, keyBuffer: key, keyByteCount: key.count, ivBuffer: iv)
-	}
-	/**
-	Creates a new StreamCryptor
-	
-	- parameter operation: the operation to perform see Operation (Encrypt, Decrypt)
-	- parameter algorithm: the algorithm to use see Algorithm (AES, DES, TripleDES, CAST, RC2, Blowfish)
-	- parameter mode: the mode used by algorithm see Mode (ECB, CBC, CFB, CTR, F8, LRW, OFB, XTS, RC4, CFB8)
-	- parameter padding: the padding to use. When using NoPadding: each block of UPDATE must be correct size
-	- parameter key: a string containing key data (will be interpreted as UTF8)
-	- parameter iv: a string containing initialization vector data (will be interpreted as UTF8)
-	
-	*/
-	public convenience init(operation: Operation, algorithm: Algorithm, mode: Mode, padding: Padding, key: String, iv: String) {
-		let keySize = key.utf8.count
-        guard let paddedKeySize = algorithm.padded(keySize: keySize) else {
-			fatalError("FATAL_ERROR: Invalid key size")
-		}
-		
-        self.init(operation:operation, algorithm:algorithm, mode: mode, padding: padding, keyBuffer:zeroPad(string: key, blockSize: paddedKeySize), keyByteCount: paddedKeySize, ivBuffer: iv)
-	}
     /**
         Add the contents of an Objective-C NSData buffer to the current encryption/decryption operation.
         
@@ -312,11 +227,11 @@ open class StreamCryptor
         - parameter byteArrayOut: output data
         - returns: a tuple containing the number of output bytes produced and the status (see Status)
     */
-    open func update(dataIn: Data, byteArrayOut: inout [UInt8]) -> (Int, Status)
+    public func update(dataIn: NSData, inout byteArrayOut: [UInt8]) -> (Int, Status)
     {
         let dataOutAvailable = byteArrayOut.count
         var dataOutMoved = 0
-        update(bufferIn: (dataIn as NSData).bytes, byteCountIn: dataIn.count, bufferOut: &byteArrayOut, byteCapacityOut: dataOutAvailable, byteCountOut: &dataOutMoved)
+        update(dataIn.bytes, byteCountIn: dataIn.length, bufferOut: &byteArrayOut, byteCapacityOut: dataOutAvailable, byteCountOut: &dataOutMoved)
         return (dataOutMoved, self.status)
     }
     /**
@@ -326,11 +241,11 @@ open class StreamCryptor
         - parameter byteArrayOut: output data
         - returns: a tuple containing the number of output bytes produced and the status (see Status)
     */
-    open func update(byteArrayIn: [UInt8], byteArrayOut: inout [UInt8]) -> (Int, Status)
+    public func update(byteArrayIn: [UInt8], inout byteArrayOut: [UInt8]) -> (Int, Status)
     {
         let dataOutAvailable = byteArrayOut.count
         var dataOutMoved = 0
-        update(bufferIn: byteArrayIn, byteCountIn: byteArrayIn.count, bufferOut: &byteArrayOut, byteCapacityOut: dataOutAvailable, byteCountOut: &dataOutMoved)
+        update(byteArrayIn, byteCountIn: byteArrayIn.count, bufferOut: &byteArrayOut, byteCapacityOut: dataOutAvailable, byteCountOut: &dataOutMoved)
         return (dataOutMoved, self.status)
     }
     /**
@@ -340,11 +255,11 @@ open class StreamCryptor
         - parameter byteArrayOut: output data
         - returns: a tuple containing the number of output bytes produced and the status (see Status)
     */
-    open func update(stringIn: String, byteArrayOut: inout [UInt8]) -> (Int, Status)
+    public func update(stringIn: String, inout byteArrayOut: [UInt8]) -> (Int, Status)
     {
         let dataOutAvailable = byteArrayOut.count
         var dataOutMoved = 0
-        update(bufferIn: stringIn, byteCountIn: stringIn.lengthOfBytes(using: String.Encoding.utf8), bufferOut: &byteArrayOut, byteCapacityOut: dataOutAvailable, byteCountOut: &dataOutMoved)
+        update(stringIn, byteCountIn: stringIn.lengthOfBytesUsingEncoding(NSUTF8StringEncoding), bufferOut: &byteArrayOut, byteCapacityOut: dataOutAvailable, byteCountOut: &dataOutMoved)
         return (dataOutMoved, self.status)
     }
     /**
@@ -359,11 +274,11 @@ open class StreamCryptor
         - parameter byteArrayOut: the output bffer        
         - returns: a tuple containing the number of output bytes produced and the status (see Status)
     */
-    open func final(byteArrayOut: inout [UInt8]) -> (Int, Status)
+    public func final(inout byteArrayOut: [UInt8]) -> (Int, Status)
     {
         let dataOutAvailable = byteArrayOut.count
         var dataOutMoved = 0
-        _ = final(bufferOut: &byteArrayOut, byteCapacityOut: dataOutAvailable, byteCountOut: &dataOutMoved)
+        final(&byteArrayOut, byteCapacityOut: dataOutAvailable, byteCountOut: &dataOutMoved)
         return (dataOutMoved, self.status)
     }
     
@@ -375,48 +290,22 @@ open class StreamCryptor
         - parameter keyByteCount: number of bytes in the key
         - parameter ivBuffer: initialization vector buffer
     */
-    public init(operation: Operation, algorithm: Algorithm, options: Options, keyBuffer: UnsafeRawPointer,
-        keyByteCount: Int, ivBuffer: UnsafeRawPointer)
+    public init(operation: Operation, algorithm: Algorithm, options: Options, keyBuffer: UnsafePointer<Void>,
+        keyByteCount: Int, ivBuffer: UnsafePointer<Void>)
     {
-        guard algorithm.isValid(keySize: keyByteCount) else  { fatalError("FATAL_ERROR: Invalid key size.") }
+        guard algorithm.isValidKeySize(keyByteCount) else  { fatalError("FATAL_ERROR: Invalid key size.") }
 
         let rawStatus = CCCryptorCreate(operation.nativeValue(), algorithm.nativeValue(), CCOptions(options.rawValue), keyBuffer, keyByteCount, ivBuffer, context)
-        if let status = Status.fromRaw(status: rawStatus)
+        if let status = Status.fromRaw(rawStatus)
         {
             self.status = status
         }
         else
         {
-            print("FATAL_ERROR: CCCryptorCreate returned unexpected status (\(rawStatus)).")
+            NSLog("FATAL_ERROR: CCCryptorCreate returned unexpected status (\(rawStatus)).")
             fatalError("CCCryptorCreate returned unexpected status.")
         }
     }
-	/**
-	- parameter operation: the operation to perform see Operation (Encrypt, Decrypt)
-	- parameter algorithm: the algorithm to use see Algorithm (AES, DES, TripleDES, CAST, RC2, Blowfish)
-	- parameter mode: the mode used by algorithm see Mode (ECB, CBC, CFB, CTR, F8, LRW, OFB, XTS, RC4, CFB8)
-	- parameter padding: the padding to use. When using NoPadding: each block of UPDATE must be correct size
-	- parameter keyBuffer: pointer to key buffer
-	- parameter keyByteCount: number of bytes in the key
-	- parameter ivBuffer: initialization vector buffer
-	
-	*/
-	public init(operation: Operation, algorithm: Algorithm, mode: Mode, padding: Padding, keyBuffer: UnsafeRawPointer, keyByteCount: Int, ivBuffer: UnsafeRawPointer) {
-		
-        guard algorithm.isValid(keySize: keyByteCount) else  { fatalError("FATAL_ERROR: Invalid key size.") }
-		
-		let rawStatus = CCCryptorCreateWithMode(operation.nativeValue(), mode.nativeValue(), algorithm.nativeValue(), padding.nativeValue(), ivBuffer, keyBuffer, keyByteCount, nil, 0, 0, 0, context)
-		if let status = Status.fromRaw(status: rawStatus)
-		{
-			self.status = status
-		}
-		else
-		{
-			NSLog("FATAL_ERROR: CCCryptorCreateWithMode returned unexpected status (\(rawStatus)).")
-			fatalError("CCCryptorCreateWithMode returned unexpected status.")
-		}
-
-	}
     /**
         - parameter bufferIn: pointer to input buffer
         - parameter inByteCount: number of bytes contained in input buffer 
@@ -425,19 +314,19 @@ open class StreamCryptor
         - parameter outByteCount: on successful completion, the number of bytes written to the output buffer
         - returns: 
     */
-    @discardableResult open func update(bufferIn: UnsafeRawPointer, byteCountIn: Int, bufferOut: UnsafeMutableRawPointer, byteCapacityOut: Int, byteCountOut: inout Int) -> Status
+    public func update(bufferIn: UnsafePointer<Void>, byteCountIn: Int, bufferOut: UnsafeMutablePointer<Void>, byteCapacityOut : Int, inout byteCountOut : Int) -> Status
     {
-        if(self.status == Status.success)
+        if(self.status == Status.Success)
         {
-            let rawStatus = CCCryptorUpdate(context.pointee, bufferIn, byteCountIn, bufferOut, byteCapacityOut, &byteCountOut)
-            if let status = Status.fromRaw(status: rawStatus)
+            let rawStatus = CCCryptorUpdate(context.memory, bufferIn, byteCountIn, bufferOut, byteCapacityOut, &byteCountOut)
+            if let status = Status.fromRaw(rawStatus)
             {
                 self.status =  status
 
             }
             else
             {
-                print("FATAL_ERROR: CCCryptorUpdate returned unexpected status (\(rawStatus)).")
+                NSLog("FATAL_ERROR: CCCryptorUpdate returned unexpected status (\(rawStatus)).")
                 fatalError("CCCryptorUpdate returned unexpected status.")
             }
         }
@@ -456,18 +345,18 @@ open class StreamCryptor
         - parameter outByteCapacity: capacity of the output buffer in bytes
         - parameter outByteCount: on successful completion, the number of bytes written to the output buffer
     */
-    @discardableResult open func final(bufferOut: UnsafeMutableRawPointer, byteCapacityOut: Int, byteCountOut: inout Int) -> Status
+    public func final(bufferOut: UnsafeMutablePointer<Void>, byteCapacityOut : Int, inout byteCountOut : Int) -> Status
     {
-        if(self.status == Status.success)
+        if(self.status == Status.Success)
         {
-            let rawStatus = CCCryptorFinal(context.pointee, bufferOut, byteCapacityOut, &byteCountOut)
-            if let status = Status.fromRaw(status:rawStatus)
+            let rawStatus = CCCryptorFinal(context.memory, bufferOut, byteCapacityOut, &byteCountOut)
+            if let status = Status.fromRaw(rawStatus)
             {
                 self.status =  status
             }
             else
             {
-                print("FATAL_ERROR: CCCryptorFinal returned unexpected status (\(rawStatus)).")
+                NSLog("FATAL_ERROR: CCCryptorFinal returned unexpected status (\(rawStatus)).")
                 fatalError("CCCryptorUpdate returned unexpected status.")
             }
         }
@@ -480,29 +369,29 @@ open class StreamCryptor
         - parameter inputByteCount: number of bytes that will be input.
         - parameter isFinal: true if buffer to be input will be the last input buffer, false otherwise.
     */
-    open func getOutputLength(inputByteCount: Int, isFinal: Bool = false) -> Int
+    public func getOutputLength(inputByteCount : Int, isFinal : Bool = false) -> Int
     {
-        return CCCryptorGetOutputLength(context.pointee, inputByteCount, isFinal)
+        return CCCryptorGetOutputLength(context.memory, inputByteCount, isFinal)
     }
     
     deinit
     {
-        let rawStatus = CCCryptorRelease(context.pointee)
-        if let status = Status.fromRaw(status: rawStatus)
+        let rawStatus = CCCryptorRelease(context.memory)
+        if let status = Status.fromRaw(rawStatus)
         {
-            if(status != .success)
+            if(status != .Success)
             {
-                print("WARNING: CCCryptoRelease failed with status \(rawStatus).")
+                NSLog("WARNING: CCCryptoRelease failed with status \(rawStatus).")
             }
         }
         else
         {
-            print("FATAL_ERROR: CCCryptorUpdate returned unexpected status (\(rawStatus)).")
+            NSLog("FATAL_ERROR: CCCryptorUpdate returned unexpected status (\(rawStatus)).")
             fatalError("CCCryptorUpdate returned unexpected status.")
         }
-        context.deallocate(capacity: 1)
+        context.dealloc(1)
     }
     
-    fileprivate var context = UnsafeMutablePointer<CCCryptorRef?>.allocate(capacity: 1)
+    private var context = UnsafeMutablePointer<CCCryptorRef>.alloc(1)
     
 }

@@ -23,19 +23,19 @@ func runShellCommand(command: String) -> String? {
     task.waitUntilExit()
     
     guard task.terminationStatus == 0 else { return nil }
-    
+
     let outputData = outputPipe.fileHandleForReading.readDataToEndOfFile()
     return String(data:outputData, encoding: String.Encoding.utf8)
 }
 
 // MARK: - File System Utilities
 func fileExists(filePath: String) -> Bool {
-    return FileManager.default.fileExists(atPath: filePath)
+    return FileManager.default.fileExists(atPath:filePath)
 }
 
 func mkdir(path: String) -> Bool {
     do {
-        try FileManager.default.createDirectory(atPath: path, withIntermediateDirectories: true, attributes: nil)
+        try FileManager.default.createDirectory(atPath:path, withIntermediateDirectories: true, attributes: nil)
         return true
     }
     catch {
@@ -44,12 +44,12 @@ func mkdir(path: String) -> Bool {
 }
 
 // MARK: - String Utilities
-func trim(_ s: String) -> String {
-    return ((s as NSString).trimmingCharacters(in: NSCharacterSet.whitespacesAndNewlines) as String)
+func trim(s: String) -> String {
+    return s.trimmingCharacters(in: .whitespacesAndNewlines)
 }
 
-func trim(_ s: String?) -> String? {
-    return (s == nil) ? nil : (trim(s!) as String)
+func trim(s: String?) -> String? {
+    return (s == nil) ? nil : (trim(s: s!) as String)
 }
 
 func reportError(message: String) -> Never {
@@ -60,22 +60,24 @@ func reportError(message: String) -> Never {
 // MARK: GenerateCommonCryptoModule
 enum SDK: String {
     case iOS = "iphoneos",
-    iOSSimulator = "iphonesimulator",
-    watchOS = "watchos",
-    watchSimulator = "watchsimulator",
-    tvOS = "appletvos",
-    tvOSSimulator = "appletvsimulator",
-    MacOSX = "macosx"
+        iOSSimulator = "iphonesimulator",
+        watchOS = "watchos",
+        watchSimulator = "watchsimulator",
+        tvOS = "appletvos",
+        tvOSSimulator = "appletvsimulator",
+        MacOSX = "macosx"
     static let all = [iOS, iOSSimulator, watchOS, watchSimulator, tvOS, tvOSSimulator, MacOSX]
     
 }
 
-guard let sdk = SDK(rawValue: CommandLine.arguments[1])?.rawValue else { reportError(message: "SDK must be one of \(SDK.all.map { $0.rawValue })") }
-guard let sdkVersion = trim(runShellCommand(command: "/usr/bin/xcrun --sdk \(sdk) --show-sdk-version")) else {
-    reportError(message: "ERROR: Failed to determine SDK version for \(sdk)")
+print(CommandLine.arguments)
+
+guard let sdk = SDK(rawValue: CommandLine.arguments[1])?.rawValue else { reportError(message:"SDK must be one of \(SDK.all.map { $0.rawValue })") }
+guard let sdkVersion = trim(s:runShellCommand(command:"/usr/bin/xcrun --sdk \(sdk) --show-sdk-version")) else {
+    reportError(message:"ERROR: Failed to determine SDK version for \(sdk)")
 }
-guard let sdkPath = trim(runShellCommand(command: "/usr/bin/xcrun --sdk \(sdk) --show-sdk-path")) else {
-    reportError(message: "ERROR: Failed to determine SDK path for \(sdk)")
+guard let sdkPath = trim(s:runShellCommand(command:"/usr/bin/xcrun --sdk \(sdk) --show-sdk-path")) else {
+    reportError(message:"ERROR: Failed to determine SDK path for \(sdk)")
 }
 
 if verbose {
@@ -94,13 +96,13 @@ else {
     moduleDirectory = "\(sdkPath)/System/Library/Frameworks/CommonCrypto.framework"
     moduleFileName = "module.map"
     
-    if fileExists(filePath: moduleDirectory) {
-        reportError(message: "Module directory already exists at \(moduleDirectory).")
+    if fileExists(filePath:moduleDirectory) {
+        reportError(message:"Module directory already exists at \(moduleDirectory).")
     }
 }
 
-if !mkdir(path: moduleDirectory) {
-    reportError(message: "Failed to create module directory \(moduleDirectory)")
+if !mkdir(path:moduleDirectory) {
+    reportError(message:"Failed to create module directory \(moduleDirectory)")
 }
 
 let headerDir = "\(sdkPath)/usr/include/CommonCrypto/"
@@ -108,19 +110,18 @@ let headerFile1 = "\(headerDir)/CommonCrypto.h"
 let headerFile2 = "\(headerDir)/CommonRandom.h"
 
 let moduleMapFile =
-    "module CommonCrypto [system] {\n" +
-        "  header \"\(headerFile1)\"\n" +
-        "  header \"\(headerFile2)\"\n" +
-        "  export *\n" +
+"module CommonCrypto [system] {\n" +
+"  header \"\(headerFile1)\"\n" +
+"  header \"\(headerFile2)\"\n" +
+"  export *\n" +
 "}\n"
 
 let moduleMapPath = "\(moduleDirectory)/\(moduleFileName)"
 do {
-    try moduleMapFile.write(toFile: moduleMapPath, atomically: true, encoding:String.Encoding.utf8)
+    try moduleMapFile.write(toFile:moduleMapPath, atomically: true, encoding:String.Encoding.utf8)
     print("Successfully created module \(moduleMapPath)")
     exit(0)
 }
 catch {
-    reportError(message: "Failed to write module map file to \(moduleMapPath)")
+    reportError(message:"Failed to write module map file to \(moduleMapPath)")
 }
-
