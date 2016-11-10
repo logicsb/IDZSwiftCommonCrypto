@@ -1,5 +1,5 @@
 # IDZSwiftCommonCrypto 
-[![Carthage compatible](https://img.shields.io/badge/Carthage-compatible-4BC51D.svg?style=flat)](https://github.com/Carthage/Carthage) [![Build Status](https://travis-ci.org/iosdevzone/IDZSwiftCommonCrypto.svg?branch=swift2.0)](https://travis-ci.org/iosdevzone/IDZSwiftCommonCrypto) [![Coverage Status](https://coveralls.io/repos/iosdevzone/IDZSwiftCommonCrypto/badge.svg?branch=swift2.0&service=github)](https://coveralls.io/github/iosdevzone/IDZSwiftCommonCrypto?branch=swift2.0)
+[![Carthage compatible](https://img.shields.io/badge/Carthage-compatible-4BC51D.svg?style=flat)](https://github.com/Carthage/Carthage) [![Build Status](https://travis-ci.org/iosdevzone/IDZSwiftCommonCrypto.svg?branch=master)](https://travis-ci.org/iosdevzone/IDZSwiftCommonCrypto) [![Coverage Status](https://coveralls.io/repos/iosdevzone/IDZSwiftCommonCrypto/badge.svg?branch=master&service=github)](https://coveralls.io/github/iosdevzone/IDZSwiftCommonCrypto?branch=master)
 
 
 A Swift wrapper for Apple's `CommonCrypto` library.
@@ -13,6 +13,16 @@ IDZSwiftCommonCrypto provides the following classes:
 * `Cryptor` for encrypting and decrypting bounded buffers,
 * `StreamCryptor` for encrypting and decrypting streaming information, and
 * `PBKDF` for deriving key material from a password or passphrase.
+
+Which Release to Use
+--------------------
+Which version you use depends on which version of Xcode and Swift you are currently using. Please refer to the list below:
+
+* 0.7.4 -- Xcode 7.3.1, Swift 2.2
+* 0.8.0 -- Xcode 7.3.1, Swift 2.2, with additional APIs for `CCMode`
+* 0.8.3 -- Xcode 8.0, Swift 2.3
+* 0.9.x -- Xcode 8.0, Swift 3.0
+
 
 Using `Digest`
 --------------
